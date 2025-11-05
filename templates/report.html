@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    /* --- GRID LAYOUT --- */
+    .report-container-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 2rem;
+    }
+
+    /* --- Cards --- */
+    .card {
+        border: 2px solid var(--primary);
+        box-shadow: var(--shadow);
+        background-color: whitesmoke;
+        transition: transform 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 6px 6px 0 var(--primary);
+    }
+    .card-header {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-bottom: 2px solid var(--primary);
+        color: var(--secondary);
+    }
+    .card-header.orange {
+        background-color: #F4991A;
+    }
+    .card-header.blue {
+        background-color: #0d6efd;
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    h5 {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+    p {
+        font-family: 'Courier New', monospace;
+        margin-bottom: 1.25rem;
+        line-height: 1.6;
+    }
+    hr {
+        border: none;
+        border-top: 2px solid var(--primary);
+        margin: 2rem 0;
+    }
+
+    /* --- Alerts --- */
+    .alert-danger {
+        font-family: 'Press Start 2P', monospace;
+        background-color: var(--accent);
+        color: var(--secondary);
+        border: 2px solid var(--primary);
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 0.8rem;
+        padding: 0.75rem 1.25rem;
+        border: 2px solid var(--primary);
+        box-shadow: 4px 4px 0 var(--primary);
+        transition: all 0.15s;
+        text-decoration: none;
+        color: var(--secondary);
+        display: inline-block;
+    }
+    .btn-danger { background-color: var(--accent); }
+    .btn-primary { background-color: #0d6efd; }
+    .btn-success { background-color: #198754; }
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 6px 6px 0 var(--primary);
+    }
+    .btn:active {
+        transform: translateY(1px);
+        box-shadow: 2px 2px 0 var(--primary);
+    }
+
+    /* --- Select --- */
+    .retro-select {
+        font-family: 'Press Start 2P', monospace;
+        font-size: 0.8rem;
+        border: 2px solid var(--primary);
+        background: var(--secondary);
+        color: var(--primary);
+        padding: 0.6rem 1rem;
+        box-shadow: 3px 3px 0 var(--primary);
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    /* --- Cyber Cell Info --- */
+    #cyberCellInfo .alert-info {
+        background: var(--secondary);
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        border-radius: 0;
+        margin-top: 1rem;
+        font-family: 'Courier New', monospace;
+        opacity: 0;
+        transform: scale(0.95);
+        animation: popIn 0.3s forwards;
+    }
+
+    /* --- Animations --- */
+    @keyframes popIn {
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes flashBorder {
+        0% { border-color: yellow; }
+        50% { border-color: red; }
+        100% { border-color: var(--primary); }
+    }
+    .flash {
+        animation: flashBorder 0.6s ease;
+    }
+</style>
+
+<div>
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Lost Money to a Phishing Scam?</h4>
+        <p class="mb-0">⚠️ Act immediately! The faster you report, the better your chance of recovery.</p>
+    </div>
+
+    <div class="report-container-grid">
+
+        <div class="card">
+            <div class="card-header orange">
+                <i class="fas fa-bolt me-2"></i>Take These Steps Immediately
+            </div>
+            <div class="card-body">
+                <h5>1. Contact Your Bank</h5>
+                <p>Report unauthorized transactions and freeze accounts immediately.</p>
+                <a href="tel:1930" class="btn btn-danger"><i class="fas fa-phone me-2"></i> Helpline: 1930</a>
+                
+                <hr>
+                
+                <h5>2. Document Everything</h5>
+                <p>Save emails, screenshots, and transaction details as evidence.</p>
+                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-2"></i> Print This Page</button>
+                
+                <hr>
+                
+                <h5>3. Change Passwords</h5>
+                <p>Update passwords for all your important accounts immediately.</p>
+                <a href="https://www.identitytheft.gov/" target="_blank" class="btn btn-success"><i class="fas fa-external-link-alt me-2"></i> Identity Theft Help</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header blue">
+                <i class="fas fa-gavel me-2"></i>Report to Authorities
+            </div>
+            <div class="card-body">
+                <h5>National Cyber Crime Portal</h5>
+                <p>File an online complaint at the official government portal.</p>
+                <a href="https://cybercrime.gov.in/" target="_blank" class="btn btn-primary"><i class="fas fa-external-link-alt me-2"></i> File Complaint</a>
+                <hr>
+                
+                <h5>Local Cyber Cell</h5>
+                <p>Select your state to view contact details:</p>
+                <select class="retro-select" id="stateSelect">
+                    <option selected disabled>-- Select your state --</option>
+                    <option value="delhi">Delhi</option>
+                    <option value="maharashtra">Maharashtra</option>
+                    <option value="karnataka">Karnataka</option>
+                </select>
+                
+                <div id="cyberCellInfo" class="d-none">
+                    <div class="alert alert-info">
+                        <h5>Contact Info</h5>
+                        <p class="mb-1"><i class="fas fa-building me-2"></i> Address: <span id="cellAddress"></span></p>
+                        <p class="mb-0"><i class="fas fa-phone me-2"></i> Helpline: <span id="cellPhone"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('stateSelect').addEventListener('change', function() {
+    const info = document.getElementById('cyberCellInfo');
+    const alertBox = info.querySelector('.alert-info');
+    const address = document.getElementById('cellAddress');
+    const phone = document.getElementById('cellPhone');
+    
+    info.classList.remove('d-none');
+    alertBox.classList.remove('flash');
+    void alertBox.offsetWidth; // reset animation
+    alertBox.classList.add('flash');
+
+    switch(this.value) {
+        case 'delhi':
+            address.textContent = 'Cyber Cell Unit, Delhi Police HQ, ITO, New Delhi - 110002';
+            phone.textContent = '011-23490000';
+            break;
+        case 'maharashtra':
+            address.textContent = 'Cyber Crime Cell, Mumbai Police, Mumbai - 400001';
+            phone.textContent = '022-22621983';
+            break;
+        case 'karnataka':
+            address.textContent = 'Cyber Crime Police Station, Bengaluru - 560001';
+            phone.textContent = '080-22094498';
+            break;
+        default:
+            info.classList.add('d-none');
+    }
+});
+</script>
+{% endblock %}

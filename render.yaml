@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: phishing-detector   # Change to your service name
+    env: python
+    buildCommand: "./render-build.sh"
+    startCommand: "gunicorn app:app"  # Or your actual start command
+    plan: free                     # Or your chosen plan

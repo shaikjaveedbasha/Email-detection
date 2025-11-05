@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Phishing Detector{% endblock %}</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* Retro styles for the confirmation pop-up */
+    .swal2-popup.retro-popup {
+      background-color: var(--secondary);
+      border: 2px solid var(--primary);
+      box-shadow: var(--shadow);
+      border-radius: 0;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--primary);
+    }
+    .retro-popup .swal2-title {
+      font-family: 'VT323', monospace;
+      color: var(--primary);
+    }
+    .retro-popup .swal2-confirm,
+    .retro-popup .swal2-cancel {
+      font-family: 'VT323', monospace;
+      font-size: 1.2rem !important;
+      border: 2px solid var(--primary) !important;
+      box-shadow: var(--shadow) !important;
+      border-radius: 0 !important;
+      transition: all 0.2s ease !important;
+    }
+    .retro-popup .swal2-confirm {
+      background-color: var(--accent) !important;
+      color: var(--secondary) !important;
+    }
+    .retro-popup .swal2-cancel {
+      background-color: #6c757d !important;
+      color: var(--secondary) !important;
+    }
+    .retro-popup .swal2-confirm:hover,
+    .retro-popup .swal2-cancel:hover {
+      transform: translate(-2px, -2px);
+    }
+
+    :root {
+      --primary: #000;
+      --secondary: #fffbe6;
+      --accent: #FF5E5B;
+      --shadow: 5px 5px 0px var(--primary);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', monospace;
+    }
+
+    body {
+      background-color: var(--secondary);
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: linear-gradient(rgba(18, 16, 16, 0.1) 50%, transparent 50%);
+      background-size: 100% 4px;
+    }
+
+    /* Navbar */
+    .navbar {
+      background-color: var(--secondary);
+      border-bottom: 2px solid var(--primary);
+      padding: 25px 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+    .navbar .brand {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+    }
+    .navbar a {
+      text-decoration: none;
+      font-weight: bold;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      padding: 6px 12px;
+      background-color: var(--secondary);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .navbar a:hover {
+      box-shadow: var(--shadow);
+      background-color: var(--accent);
+      color: #e7ffe7;
+      transform: translate(-2px, -2px);
+    }
+    .navbar a:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--primary);
+    }
+
+    /* Flash messages */
+    .alert {
+      border: 2px solid var(--primary);
+      padding: 12px;
+      margin: 20px auto;
+      max-width: 800px;
+      font-weight: bold;
+      box-shadow: var(--shadow);
+    }
+    .alert-success { background: #e7ffe7; }
+    .alert-danger { background: #ffe7e7; }
+    .alert-warning { background: #fff7e0; }
+
+    /* Content */
+    .content {
+      flex: 1;
+      padding: 5%;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 2px solid var(--primary);
+      padding: 15px;
+      text-align: center;
+      font-size: 14px;
+      background-color: var(--secondary);
+      box-shadow: var(--shadow);
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: bold;
+      margin: 0 5px;
+    }
+    .footer a:hover { color: var(--accent); }
+
+    .print-btn {
+      color: black;
+      border: 2px solid var(--primary);
+      padding: 5px 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: all 0.2s;
+    }
+    .print-btn:hover {
+      box-shadow: var(--shadow);
+      background-color: var(--accent);
+      color: #e7ffe7;
+    }
+
+    /* CRT text effect */
+    .crt-text {
+      text-shadow: 0 0 2px rgba(0, 255, 85, 0.4); 
+    }
+  <!-- Logout Link -->
+<li style="position: relative;">
+  <a href="#" id="logout-link">Logout</a>
+</li>
+
+<!-- Logout Popup Card -->
+<div id="logout-popup" class="retro-popup">
+  <p id="popup-text">⚡ Are you sure you want to logout? <span class="arrow">➤</span></p>
+  <div id="popup-buttons">
+    <button id="yes-btn" class="yes-btn">Yes</button>
+    <button id="no-btn" class="no-btn">No</button>
+  </div>
+</div>
+
+<style>
+/* Popup card styling */
+#logout-popup {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fffbe6;
+  border: 3px solid #FF5E5B;
+  padding: 25px 40px;
+  text-align : center;
+  display: none;
+  z-index: 1000;
+  box-shadow: 5px 5px 0 #000;
+  font-family: 'VT323', monospace;
+  color: #000;
+  border-radius: 0;
+}
+
+/* Blinking arrow */
+.arrow {
+  display: inline-block;
+  animation: blink 1s infinite;
+  margin-left: 5px;
+}
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
+/* Buttons styling */
+#popup-buttons button {
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+  padding: 8px 20px;
+  margin: 10px;
+  border: 3px solid #000;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 #000;
+  transition: all 0.2s ease;
+}
+
+/* YES button */
+#yes-btn {
+  background-color: #FF5E5B;
+  color: #fffbe6;
+}
+#yes-btn:hover {
+  background-color: #e60000;
+  transform: translate(-2px, -2px);
+}
+
+/* NO button */
+#no-btn {
+  background-color: #00FF7F;
+  color: #000;
+}
+#no-btn:hover {
+  background-color: #00cc66;
+  transform: translate(-2px, -2px);
+}
+
+/* Push effect */
+#popup-buttons button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* Fade in animation */
+#logout-popup.show {
+  display: block;
+  animation: fadeIn 0.3s forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -45%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+</style>
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="brand crt-text">🛡 Phishing Detector</div>
+    <ul>
+      {% if session.get('user_id') %}
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/history">History</a></li>
+        <li><a href="/report">Report</a></li>
+        <li><a href="/tips">Tips</a></li>
+        <li style="position: relative;">
+    <a href="#" id="logout-link">Logout</a>
+    {% include 'logout_confirm.html' %}
+</li>
+
+      {% else %}
+        <li><a href="/">Home</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Content -->
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>© 2024 Phishing Detector</p>
+    <p>
+      <a href="/tips">Security Tips</a> |
+      <a href="/history">Analysis History</a>
+      <button class="print-btn" onclick="window.print()">🖨 Print</button>
+    </p>
+  </div>
+
+  {% block scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', function(event) {
+              event.preventDefault(); // Prevent immediate navigation
+
+              Swal.fire({
+                  title: 'Logout?',
+                  text: "Are you sure you want to logout?",
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, Logout',
+                  cancelButtonText: 'Cancel',
+                  reverseButtons: true,
+                  customClass: { popup: 'retro-popup' }
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      window.location.href = logoutBtn.href;
+                  }
+              });
+          });
+      }
+    });
+  document.addEventListener('DOMContentLoaded', () => {
+  const logoutLink = document.getElementById('logout-link');
+  const popup = document.getElementById('logout-popup');
+  const yesBtn = document.getElementById('yes-btn');
+  const noBtn = document.getElementById('no-btn');
+  const popupText = document.getElementById('popup-text');
+  const buttonsDiv = document.getElementById('popup-buttons');
+
+  // Show popup
+  logoutLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    popup.classList.add('show');
+  });
+
+  // YES click
+  yesBtn.addEventListener('click', () => {
+    buttonsDiv.style.display = 'none';
+    popupText.textContent = '🔄 Logging you out...';
+    setTimeout(() => {
+      window.location.href = "{{ url_for('logout') }}";
+    }, 2000); // 2 seconds before redirect
+  });
+
+  // NO click
+  noBtn.addEventListener('click', () => {
+    buttonsDiv.style.display = 'none';
+    popupText.textContent = '👍 Thanks!';
+    setTimeout(() => {
+      popup.classList.remove('show');
+      buttonsDiv.style.display = 'block'; // reset buttons for next time
+      popupText.innerHTML = '⚡ Are you sure you want to logout? <span class="arrow">➤</span>';
+    }, 2000); // popup disappears after 2 seconds
+  });
+});
+</script>
+  {% endblock %}
+</body>
+</html>

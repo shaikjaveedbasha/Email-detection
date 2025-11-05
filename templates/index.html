@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailShield - Analyze Emails</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+    <div class="max-w-3xl w-full bg-white p-8 rounded-xl shadow-lg mt-10">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-4 text-center">
+            📧 Email Phishing Detector
+        </h1>
+        <p class="text-gray-600 mb-6 text-center">
+            Upload a screenshot of a suspicious email and get AI + heuristic phishing analysis instantly.
+        </p>
+
+        <!-- Login Check -->
+        {% if session.get('user_id') %}
+        <form id="upload-form" class="mb-6 space-y-4">
+            <input type="file" id="file" name="file" accept="image/*"
+                   class="w-full text-gray-700 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button type="submit" 
+                    class="w-full py-3 rounded-md bg-purple-600 text-white font-medium hover:bg-purple-700 transition">
+                Analyze Email
+            </button>
+        </form>
+        {% else %}
+        <p class="text-center text-red-600 font-medium">
+            Please <a href="{{ url_for('login_page') }}" class="text-purple-600 underline">login</a> to analyze emails.
+        </p>
+        {% endif %}
+
+        <div id="results" class="hidden mt-6">
+            <h2 class="text-xl font-bold mb-3">Analysis Results</h2>
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full text-left border border-gray-200">
+                    <thead>
+                        <tr class="bg-purple-100">
+                            <th class="px-4 py-2 border">Phishing Detected</th>
+                            <th class="px-4 py-2 border">Confidence Score</th>
+                            <th class="px-4 py-2 border">Detected Indicators</th>
+                            <th class="px-4 py-2 border">URLs Found</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="phishing" class="px-4 py-2 border"></td>
+                            <td id="confidence" class="px-4 py-2 border"></td>
+                            <td id="indicators" class="px-4 py-2 border"></td>
+                            <td id="urls" class="px-4 py-2 border"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="mt-4 font-semibold">Extracted Email Text:</h3>
+            <pre id="email-text" class="bg-gray-100 p-4 rounded-md text-gray-800 whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+
+    <script>
+    {% if session.get('user_id') %}
+    document.getElementById('upload-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file');
+        if (!fileInput.files.length) {
+            alert("Please select a file to upload.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch('/upload', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if(data.success) {
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('phishing').innerText = data.is_phishing ? '✅ Yes' : '❌ No';
+                document.getElementById('confidence').innerText = data.confidence.toFixed(2);
+                document.getElementById('indicators').innerText = data.indicators.join(', ');
+                document.getElementById('urls').innerText = data.urls_found.join(', ');
+                document.getElementById('email-text').innerText = data.text;
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred while uploading the file.');
+        }
+    });
+    {% endif %}
+    </script>
+</body>
+</html>

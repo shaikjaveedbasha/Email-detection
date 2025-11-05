@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #1a1a1a;
+  --secondary: #fffbe6;
+  --accent: #ff5e5b;
+  --accent2: #00c49a;
+  --accent3: #ffd93d;
+  --shadow: 5px 5px 0 var(--primary);
+}
+
+/* Dashboard */
+.dashboard-container {
+  width: 100%;
+  padding: 2rem 0;
+  font-family: 'Press Start 2P', monospace, 'Courier New', monospace;
+  box-sizing: border-box;
+}
+
+/* Header */
+.card-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.card-history-header h2 {
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+.card-history-header a.btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--primary);
+  background: var(--accent2);
+  color: var(--primary);
+  box-shadow: 4px 4px 0 var(--primary);
+  transition: all 0.2s;
+}
+.card-history-header a.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--primary);
+}
+.card-history-header a.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--primary);
+}
+
+/* Search & Filter */
+.search-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.search-filter input,
+.search-filter select {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.8rem;
+  border: 2px solid var(--primary);
+  background: var(--secondary);
+  color: var(--primary);
+  padding: 0.6rem 1rem;
+  box-shadow: 3px 3px 0 var(--primary);
+  transition: all 0.2s;
+}
+.search-filter input:focus,
+.search-filter select:focus {
+  outline: none;
+  background: #fffdf7;
+  box-shadow: 5px 5px 0 var(--primary);
+}
+
+/* Table styling - full width */
+table {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.9rem;
+  border-collapse: collapse;
+  width: 100%;
+}
+table th, table td {
+  border: 2px solid var(--primary);
+  padding: 1rem 0.8rem;
+  text-align: left;
+}
+table th {
+  background: var(--accent3);
+  color: var(--primary);
+}
+
+/* Smooth retro hover (instead of glitch/shake) */
+table tbody tr {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+}
+table tbody tr:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 6px 6px 0 var(--primary);
+  background: #fffbe6; /* subtle retro highlight */
+}
+
+/* Alternate rows */
+table tbody tr:nth-child(even) { background: #fff9e6; }
+table tbody tr:nth-child(odd) { background: #fdf7f0; }
+
+/* Confidence bar */
+.retro-bar {
+  border: 2px solid var(--primary);
+  width: 100%;
+  background: #eee;
+  height: 1rem;
+  box-shadow: 3px 3px 0 var(--primary);
+}
+.retro-bar-fill {
+  height: 100%;
+  text-align: right;
+  padding-right: 4px;
+  font-size: 0.7rem;
+  line-height: 1rem;
+  color: #fff;
+  animation: growBar 1s ease-in-out forwards;
+}
+.retro-bar-fill.safe { background: var(--accent2); }
+.retro-bar-fill.danger { background: var(--accent); }
+@keyframes growBar {
+  from { width: 0; }
+  to { width: var(--target-width); }
+}
+
+/* Badges */
+.badge-phishing, .badge-safe, .badge-indicator {
+  transform: scale(0);
+  animation: pop 0.3s forwards;
+}
+@keyframes pop { to { transform: scale(1); } }
+
+.badge-phishing {
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+}
+.badge-safe {
+  background: var(--accent2);
+  color: #fff;
+  font-weight: bold;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+}
+.badge-indicator {
+  background: var(--accent3);
+  color: var(--primary);
+  font-weight: bold;
+  border: 2px solid var(--primary);
+  box-shadow: 3px 3px 0 var(--primary);
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px 2px 2px 0;
+  font-size: 0.65rem;
+}
+
+/* Empty state retro terminal */
+.retro-terminal {
+  background: var(--primary);
+  color: var(--accent3);
+  padding: 2rem;
+  border: 2px solid var(--accent3);
+  font-size: 0.9rem;
+  text-align: left;
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  box-shadow: 6px 6px 0 var(--primary);
+}
+.typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--accent3);
+  width: 0;
+  animation: typing 2s steps(30, end) forwards, blink 0.8s infinite;
+}
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+/* Glitch + shake */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+}
+.shake { animation: shake 0.3s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  table, table th, table td {
+    font-size: 0.7rem;
+  }
+}
+</style>
+
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="card-history-header">
+    <h2 class="glitch-hover">📜 Analysis History</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn">NEW ANALYSIS</a>
+  </div>
+
+  <!-- Search & Filter -->
+  <div class="search-filter">
+    <input id="searchInput" type="text" placeholder="Search by file name...">
+    <select id="filterSelect">
+      <option value="all">All Results</option>
+      <option value="phishing">Phishing</option>
+      <option value="safe">Safe</option>
+    </select>
+  </div>
+
+  {% if analyses %}
+  <div style="overflow-x:auto;">
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>File Name</th>
+          <th>Result</th>
+          <th>Confidence</th>
+          <th>Detected Indicators</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for analysis in analyses %}
+        <tr data-result="{{ 'phishing' if analysis.is_phishing else 'safe' }}">
+          <td>{{ analysis.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td class="file-name">{{ analysis.filename }}</td>
+          <td>
+            {% if analysis.is_phishing %}
+              <span class="badge-phishing">Phishing</span>
+            {% else %}
+              <span class="badge-safe">Safe</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="retro-bar">
+              <div class="retro-bar-fill {{ 'danger' if analysis.is_phishing else 'safe' }}" 
+                   style="--target-width: {{ analysis.confidence_score }}%; width: {{ analysis.confidence_score }}%;">
+                   {{ "%.0f"|format(analysis.confidence_score) }}%
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if analysis.detected_indicators %}
+              {% for indicator in analysis.detected_indicators.split(',') %}
+                {% if indicator %}
+                  <span class="badge-indicator" title="{{ indicator.replace('_',' ').title() }}">
+                    {{ indicator.replace('_',' ').title() }}
+                  </span>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <span class="text-muted fst-italic">No indicators</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state retro-terminal">
+    <p>> <span class="typing">No analysis done yet...</span></p>
+    <p>> Upload an email to begin scanning.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const searchInput = document.getElementById("searchInput");
+const filterSelect = document.getElementById("filterSelect");
+const tableBody = document.querySelector("#historyTable tbody");
+
+function filterTable() {
+  if (!tableBody) return;
+  const searchTerm = searchInput.value.toLowerCase();
+  const filterValue = filterSelect.value;
+  let visible = 0;
+
+  Array.from(tableBody.rows).forEach(row => {
+    const fileName = row.querySelector(".file-name").textContent.toLowerCase();
+    const result = row.dataset.result;
+
+    const matchesSearch = fileName.includes(searchTerm);
+    const matchesFilter = (filterValue === "all" || result === filterValue);
+
+    const show = matchesSearch && matchesFilter;
+    row.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  // Shake if no rows are visible
+  if (visible === 0) {
+    tableBody.classList.add("shake");
+    setTimeout(() => tableBody.classList.remove("shake"), 400);
+  }
+}
+
+if (searchInput) searchInput.addEventListener("input", filterTable);
+if (filterSelect) filterSelect.addEventListener("change", filterTable);
+</script>
+{% endblock %}

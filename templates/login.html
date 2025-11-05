@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MailShield Login</title>
+<style>
+:root {
+  --primary: #000;
+  --secondary: #F7F4EA; /* off-white background */
+  --accent: #FF5E5B;
+  --shadow: 5px 5px 0px var(--primary);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Courier New', monospace; }
+
+body { 
+  background-color: var(--secondary);
+  display:flex; 
+  justify-content:center; 
+  align-items:center; 
+  min-height:100vh;
+  padding:20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  border: 2px solid var(--primary);
+  padding: 40px 30px;
+  background-color: var(--secondary);
+  box-shadow: var(--shadow);
+  position: relative;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 5px; left:5px; right:-5px; bottom:-5px;
+  border: 2px solid var(--primary);
+  z-index: -1;
+  border-radius: 12px;
+}
+
+h1 { 
+  color: var(--primary);
+  margin-bottom: 30px;
+  font-size: 32px; 
+  font-weight: 700; 
+  letter-spacing:2px; 
+  text-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: var(--primary);
+  letter-spacing: 1px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid var(--primary);
+  background-color: var(--secondary);
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  box-shadow: 4px 4px 0px var(--primary);
+  transform: translate(-1px,-1px);
+}
+
+/* SIGN IN button */
+button {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: var(--secondary);
+  border: 3px solid var(--primary);
+  font-family: 'Press Start 2P';
+  font-size: 12px;
+  letter-spacing: 2px;
+  box-shadow: 4px 4px 0 #000;
+  cursor: pointer;
+  transition: all 0.2s;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+
+button:hover {
+  background-color: #FF3B30;
+  box-shadow: 6px 6px 0 #000;
+  transform: translate(-2px,-2px);
+}
+
+button:active {
+  transform: translate(2px,2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* Error messages */
+small.text-danger {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent);
+  background-color: #fff; /* white background */
+  font-weight: bold;
+  border: 2px solid var(--accent);
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0px var(--primary);
+  letter-spacing: 1px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+/* Footer links */
+.footer {
+  margin-top: 20px;
+  font-size: 14px;
+}
+.footer a {
+  color: var(--accent);
+  font-weight: bold;
+  text-decoration: underline;
+  transition: all 0.2s;
+}
+.footer a:hover {
+  color: var(--primary); 
+}
+</style>
+</head>
+<body>
+<form action="{{ url_for('login_page') }}" method="POST" class="login-container">
+    <h1>LOGIN</h1>
+
+    <div class="input-group">
+        <label for="email">USERNAME or EMAIL</label>
+        <input type="text" id="email" name="username" placeholder="Email or Username" value="{{ username_value }}">
+        {% if error_username %}
+        <small class="text-danger" id="error-username">{{ error_username }}</small>
+        {% endif %}
+    </div>
+
+    <div class="input-group">
+        <label for="password">PASSWORD</label>
+        <input type="password" id="password" name="password" placeholder="••••••••">
+        {% if error_password %}
+        <small class="text-danger" id="error-password">{{ error_password }}</small>
+        {% endif %}
+    </div>
+
+    <button type="submit">SIGN IN</button>
+
+    <div class="footer">
+        <a href="{{ url_for('forgot_password_page') }}">Forgot password?</a><br><br>
+        Don't have an account? <a href="{{ url_for('register_page') }}">Sign up</a>
+    </div>
+</form>
+
+<script>
+// Auto-hide error messages after 4 seconds
+window.addEventListener('DOMContentLoaded', () => {
+    const errors = document.querySelectorAll('small.text-danger');
+    errors.forEach(err => {
+        if(err) {
+            setTimeout(() => {
+                err.style.opacity = '0';
+                setTimeout(() => err.remove(), 500); // remove after fade out
+            }, 4000);
+        }
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const emailInput = document.getElementById('email');
+    const pwdInput = document.getElementById('password');
+    const signInBtn = document.querySelector('button[type="submit"]');
+
+    async function checkCredentials() {
+        const email = emailInput.value.trim();
+        const password = pwdInput.value.trim();
+
+        if (!email || !password) {
+            signInBtn.style.backgroundColor = '#FF5E5B'; // Keep original color
+            return;
+        }
+
+        try {
+            const fd = new FormData();
+            fd.append('username', email);
+            fd.append('password', password);
+
+            const resp = await fetch('/login', {
+                method: 'POST',
+                body: fd,
+                credentials: 'same-origin'
+            });
+
+            if (resp.redirected) {
+                // Correct login → make button green
+                signInBtn.style.backgroundColor = '#00c49a'; // Green
+            } else {
+                signInBtn.style.backgroundColor = '#FF5E5B'; // Red / original
+            }
+
+        } catch(err) {
+            console.error(err);
+            signInBtn.style.backgroundColor = '#FF5E5B';
+        }
+    }
+
+    emailInput.addEventListener('input', checkCredentials);
+    pwdInput.addEventListener('input', checkCredentials);
+});
+</script>
+</body>
+</html>

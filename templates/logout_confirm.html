@@ -1,0 +1,119 @@
+<!-- logout_confirm.html -->
+<div id="logout-popup" style="display:none;">
+  <div class="retro-card">
+    <p id="popup-text" class="crt-text">⚡ Are you sure you want to logout? ⚡</p>
+    <div class="buttons">
+      <button id="yes-btn" class="retro-btn yes-btn crt-text">YES</button>
+      <button id="no-btn" class="retro-btn no-btn crt-text">NO</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Retro card */
+.retro-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 25px;
+    background-color: var(--secondary);
+    border: 3px solid var(--primary);
+    box-shadow: var(--shadow);
+    font-family: 'VT323', monospace;
+    position: relative;
+    border-radius: 4px;
+    min-width: 230px;
+}
+
+/* Buttons container */
+.buttons {
+    display: flex;
+    gap: 15px;
+}
+
+/* Retro push buttons */
+.retro-btn {
+    padding: 8px 18px;
+    border: 2px solid var(--primary);
+    font-family: 'VT323', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--primary);
+    transition: all 0.1s ease-in-out;
+    outline: none;
+}
+.retro-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--primary);
+}
+
+/* YES button - red */
+.yes-btn {
+    background-color: #FF4B5C;
+    color: var(--secondary);
+}
+.yes-btn:hover {
+    background-color: #FF1E2D;
+}
+
+/* NO button - green */
+.no-btn {
+    background-color: #28C76F;
+    color: var(--secondary);
+}
+.no-btn:hover {
+    background-color: #0FA65A;
+}
+
+/* CRT text glow */
+.crt-text {
+    text-shadow: 0 0 3px rgba(0, 255, 85, 0.8);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutLink = document.getElementById('logout-link');
+    const popup = document.getElementById('logout-popup');
+    const yesBtn = document.getElementById('yes-btn');
+    const noBtn = document.getElementById('no-btn');
+    const popupText = document.getElementById('popup-text');
+    const buttonsDiv = document.querySelector('.buttons');
+
+    // Show popup near navbar
+    logoutLink.addEventListener('click', function(e){
+        e.preventDefault();
+        popup.style.display = 'flex';
+        popup.style.position = 'absolute';
+        popup.style.top = '50px'; 
+        popup.style.right = '10px';
+        popup.style.zIndex = '1000';
+        // Show buttons again if hidden previously
+        buttonsDiv.style.display = 'flex';
+    });
+
+    // NO button
+    noBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        // Hide buttons
+        buttonsDiv.style.display = 'none';
+        popupText.textContent = "👍 Thanks!";
+        setTimeout(() => {
+            popup.style.display = 'none';
+            popupText.textContent = "⚡ Are you sure you want to logout? ⚡";
+            // Buttons will reappear next time popup is shown
+        }, 1500);
+    });
+
+    // YES button
+    yesBtn.addEventListener('click', function(){
+        // Hide buttons
+        buttonsDiv.style.display = 'none';
+        popupText.textContent = "⏳ Logging you out...";
+        setTimeout(() => {
+            window.location.href = "{{ url_for('logout') }}";
+        }, 1500);
+    });
+});
+</script>

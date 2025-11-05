@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+:root {
+  --primary: #1a1a1a;
+  --secondary: #fffbe6;
+  --accent: #ff5e5b;
+  --accent2: #00c49a;
+  --accent3: #ffd93d;
+  --shadow: 5px 5px 0px var(--primary);
+}
+.dashboard-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  text-align: center;
+}
+.upload-panel {
+  background: #fffdf7;
+  border: 3px solid var(--primary);
+  border-radius: 14px;
+  padding: 3.5rem;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 6px 6px 0px var(--primary);
+  transform-style: preserve-3d;
+}
+.upload-panel:hover {
+  background: #f8f7f0;
+  box-shadow: 8px 8px 0px var(--primary);
+}
+.upload-panel h3 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.7rem;
+  color: var(--primary);
+  text-shadow: 2px 2px 0 var(--accent);
+}
+.upload-panel p {
+  font-family: 'Courier New', monospace;
+  margin-top: 1rem;
+  color: var(--primary);
+  background: var(--secondary);
+  border: 2px solid var(--primary);
+  padding: 4px 8px;
+  display: inline-block;
+  box-shadow: 3px 3px 0 var(--primary);
+}
+.upload-panel svg {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1rem;
+  color: var(--accent2);
+  filter: drop-shadow(2px 2px 0px var(--primary));
+}
+.upload-panel.drag-over {
+  border-color: var(--accent);
+  box-shadow: 12px 12px 0 var(--accent3);
+}
+
+/* Click push & flash effect */
+.upload-panel:active {
+  transform: scale(0.97) perspective(1000px) rotateX(0deg) rotateY(0deg);
+  box-shadow: 3px 3px 0px var(--primary);
+  animation: flash 0.1s ease;
+}
+@keyframes flash {
+  0% { background-color: #fffdf7; }
+  50% { background-color: #ffd93d; }
+  100% { background-color: #fffdf7; }
+}
+
+/* Loader & Results */
+#loadingArea {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.2rem;
+  margin-top: 2rem;
+}
+#resultPanel {
+  margin-top: 0;
+  text-align: left;
+  border: 2px solid var(--primary);
+  background: #fffdf7;
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.6s ease;
+}
+#resultPanel.active {
+  transform: translateY(0);
+  opacity: 1;
+  margin-top: 2.5rem;
+}
+#resultPanel .card-header {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 2px solid var(--primary);
+}
+#resultPanel .card-body {
+  padding: 1.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1.8;
+}
+.badge {
+  font-family: 'VT323', monospace;
+  padding: 6px 10px;
+  font-size: 1rem;
+  color: var(--secondary);
+  margin: 3px;
+  display: inline-block;
+}
+.badge-safe { background-color: var(--accent2); }
+.badge-phishing { background-color: var(--accent); }
+.retro-bar {
+  border: 2px solid var(--primary);
+  height: 25px;
+  width: 100%;
+  margin: 10px 0;
+  background: #e0e0e0;
+  position: relative;
+}
+.retro-bar-fill {
+  height: 100%;
+  background: var(--accent2);
+  text-align: center;
+  font-size: 0.9rem;
+  font-family: 'VT323', monospace;
+  color: var(--secondary);
+  line-height: 25px;
+  transition: width 1s ease-in-out, background 0.3s ease;
+}
+.retro-bar-fill.danger {
+  background: var(--accent);
+}
+.highlight-suspicious {
+  background-color: yellow;
+  font-weight: bold;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Bounce for phishing header */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+#resultHeader.phishing-bounce {
+  animation: bounce 0.5s ease infinite;
+}
+
+/* Confetti effect */
+.confetti-piece {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent3);
+  animation: confetti-fall 1s linear forwards;
+  z-index: 10;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100px) rotate(360deg); opacity: 0; }
+}
+
+/* Zoom-in for uploaded image */
+#result-image {
+  transition: transform 0.6s ease;
+}
+#result-image.zoom-in {
+  transform: scale(1.05);
+}
+
+/* Typing cursor */
+#result-text::after {
+  content: '|';
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 0.7s infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+</style>
+
+<div class="dashboard-container">
+    <!-- Upload Panel -->
+    <div id="uploadPanel" class="upload-panel">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 6l-4-3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <h3>Upload Screenshot</h3>
+        <p>Drag & Drop or Click to Select</p>
+        <input id="fileInput" type="file" accept="image/*" hidden>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingArea" style="display:none; margin-top:2rem;">
+        <p>⏳ Analyzing your email...</p>
+    </div>
+
+    <!-- Results -->
+    <div id="resultPanel">
+        <div class="card-header" id="resultHeader"></div>
+        <div class="card-body">
+            <p><strong>Filename:</strong> <span id="result-filename"></span></p>
+            <p><strong>Result:</strong> <span id="result-status"></span></p>
+            
+            <h4>Confidence:</h4>
+            <div class="retro-bar">
+                <div id="confidenceBar" class="retro-bar-fill">0%</div>
+            </div>
+
+            <h4>Indicators:</h4>
+            <div id="result-indicators"></div>
+
+            <h4>Suspicious URLs:</h4>
+            <div id="result-urls"></div>
+
+            <h4>Uploaded Image:</h4>
+            <img id="result-image" style="max-width:100%; border:2px solid var(--primary);" />
+
+            <h4>Extracted Text:</h4>
+            <div id="result-text" style="background:#f0f0f0; padding:10px; font-family:monospace; white-space:pre-wrap;"></div>
+
+            <div id="reportButtonContainer" style="display:none; margin-top:1rem;">
+                <a href="{{ url_for('report') }}" class="btn btn-danger">🚩 Report This Incident</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const panel = document.getElementById("uploadPanel");
+    const fileInput = document.getElementById("fileInput");
+    const loadingArea = document.getElementById("loadingArea");
+    const resultPanel = document.getElementById("resultPanel");
+
+    // 3D hover effect
+    panel.addEventListener("mousemove", (e) => {
+        const rect = panel.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * 10; 
+        const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * -10;
+        panel.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
+    });
+    panel.addEventListener("mouseleave", () => {
+        panel.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)";
+    });
+    panel.addEventListener("click", () => fileInput.click());
+    panel.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        panel.classList.add("drag-over");
+    });
+    panel.addEventListener("dragleave", () => panel.classList.remove("drag-over"));
+    panel.addEventListener("drop", (e) => {
+        e.preventDefault();
+        panel.classList.remove("drag-over");
+        if(e.dataTransfer.files && e.dataTransfer.files[0]) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);
+    });
+
+    async function handleFileUpload(file) {
+        loadingArea.style.display = 'block';
+        resultPanel.classList.remove('active');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Server error');
+            }
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            displayResults(data, file.name);
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred: ' + error.message);
+        } finally {
+            loadingArea.style.display = 'none';
+        }
+    }
+
+    // HTML-aware typewriter function
+    function typeHTML(container, html, speed = 20) {
+        container.innerHTML = '';
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+
+        function typeNode(node, parent, callback) {
+            if (!node) { callback(); return; }
+
+            if (node.nodeType === Node.TEXT_NODE) {
+                let i = 0;
+                function typeChar() {
+                    if (i < node.textContent.length) {
+                        parent.appendChild(document.createTextNode(node.textContent[i]));
+                        i++;
+                        setTimeout(typeChar, speed);
+                    } else callback();
+                }
+                typeChar();
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const el = document.createElement(node.tagName);
+                el.className = node.className;
+                parent.appendChild(el);
+                let childIndex = 0;
+                function nextChild() {
+                    if (childIndex < node.childNodes.length) {
+                        typeNode(node.childNodes[childIndex], el, () => {
+                            childIndex++;
+                            nextChild();
+                        });
+                    } else callback();
+                }
+                nextChild();
+            } else callback();
+        }
+
+        let index = 0;
+        function next() {
+            if (index < temp.childNodes.length) {
+                typeNode(temp.childNodes[index], container, () => { index++; next(); });
+            }
+        }
+        next();
+    }
+
+    function displayResults(data, filename) {
+        const resultHeader = document.getElementById('resultHeader');
+
+        // Header
+        if (data.is_phishing) {
+            resultHeader.textContent = '⚠️ Phishing Detected!';
+            resultHeader.style.backgroundColor = 'var(--accent)';
+            resultHeader.style.color = 'var(--secondary)';
+            resultHeader.classList.add('phishing-bounce');
+            triggerConfetti();
+        } else {
+            resultHeader.textContent = '✅ Looks Safe!';
+            resultHeader.style.backgroundColor = 'var(--accent2)';
+            resultHeader.style.color = 'var(--secondary)';
+            resultHeader.classList.remove('phishing-bounce');
+        }
+
+        document.getElementById('result-filename').textContent = filename;
+        document.getElementById('result-status').innerHTML = data.is_phishing 
+            ? '<span class="badge badge-phishing">Phishing</span>'
+            : '<span class="badge badge-safe">Safe</span>';
+
+        // Confidence bar
+        const confidenceBar = document.getElementById('confidenceBar');
+        confidenceBar.style.width = '0%';
+        setTimeout(() => {
+            confidenceBar.style.width = data.confidence + '%';
+            confidenceBar.textContent = Math.round(data.confidence) + '%';
+            confidenceBar.className = 'retro-bar-fill ' + (data.is_phishing ? 'danger' : '');
+        }, 50);
+
+        // Indicators
+        const indicatorsDiv = document.getElementById('result-indicators');
+        indicatorsDiv.innerHTML = '';
+        if (data.indicators) {
+            data.indicators.forEach(ind => {
+                const span = document.createElement('span');
+                span.className = 'badge';
+                span.style.background = 'var(--accent3)';
+                span.style.color = 'var(--primary)';
+                span.textContent = ind.replace('_', ' ').toUpperCase();
+                indicatorsDiv.appendChild(span);
+            });
+        }
+
+        // URLs
+        const urlsDiv = document.getElementById('result-urls');
+        urlsDiv.innerHTML = '';
+        if (data.urls_found && data.urls_found.length > 0) {
+            const ul = document.createElement('ul');
+            data.urls_found.forEach(url => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+                ul.appendChild(li);
+            });
+            urlsDiv.appendChild(ul);
+        }
+
+        // Uploaded image
+        if (data.preview_base64) {
+            const uploadedImage = document.getElementById('result-image');
+            uploadedImage.src = `data:image/png;base64,${data.preview_base64}`;
+            uploadedImage.classList.remove('zoom-in');
+            setTimeout(() => uploadedImage.classList.add('zoom-in'), 100);
+        }
+
+        // Extracted text with typing effect
+        let highlightedText = data.text || '';
+        const patterns = {
+            'urgency': /(urgent|immediate|action required|account.*suspend)/gi,
+            'personal_info': /(verify.*account|confirm.*password|update.*details)/gi,
+            'threats': /(terminate|suspend|close.*account)/gi,
+            'poor_grammar': /(you\s+is|they\s+is|we\s+is)/gi,
+            'suspicious_links': /(click.*here|login.*now)/gi,
+            'generic_greeting': /(dear.*user|dear.*customer|dear.*sir\/madam)/gi
+        };
+        for (let key in patterns) {
+            highlightedText = highlightedText.replace(patterns[key],
+                match => `<span class="highlight-suspicious">${match}</span>`);
+        }
+        const extractedTextDiv = document.getElementById('result-text');
+        typeHTML(extractedTextDiv, highlightedText, 10);
+
+        // Report button
+        const reportBtn = document.getElementById('reportButtonContainer');
+        reportBtn.style.display = data.is_phishing ? 'block' : 'none';
+
+        setTimeout(() => resultPanel.classList.add('active'), 50);
+    }
+
+    function triggerConfetti() {
+        const panel = document.getElementById('resultPanel');
+        for (let i = 0; i < 15; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            confetti.style.left = Math.random() * panel.offsetWidth + 'px';
+            confetti.style.backgroundColor = `hsl(${Math.random()*360},80%,60%)`;
+            panel.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 1200);
+        }
+    }
+});
+</script>
+{% endblock %}
